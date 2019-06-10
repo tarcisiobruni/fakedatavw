@@ -13,6 +13,8 @@ def start():
     lstMesaId = seed.mesa(lstEstabelecimentoId)
     lstConsumidorId = seed.criaConsumidor()
     lstComandaId = seed.comanda(lstMesaId,lstConsumidorId)
+    lstPedidos = seed.pedido(lstComandaId)
+
     return 0
 
 def main():    

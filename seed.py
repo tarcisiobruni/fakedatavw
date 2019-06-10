@@ -428,7 +428,7 @@ def comanda(lstMesaId,lstConsumidorId):
             for _ in range(random.randint(1,3)):
                 consumidorId = lstConsumidorId[random.randint(0,len(lstConsumidorId)-1)]  
 
-                addMinutes = random.randint(30,120)
+                addMinutes = random.randint(45,120)
                 horarioinicio = faker.date_time_between(start_date="-5y",end_date = datetime.today()-timedelta(days=1))
                 horariofim = horarioinicio + timedelta(minutes=addMinutes)
 
@@ -445,7 +445,6 @@ def comanda(lstMesaId,lstConsumidorId):
                 SCRIPT = query + '\n'
                 geraArquivoScript(SCRIPT)   
                  
-
                 #outros consumidores na comanda:
                 tempConsumidores = [consumidorId]
                 while len(tempConsumidores) < 3:
@@ -456,9 +455,7 @@ def comanda(lstMesaId,lstConsumidorId):
                 for consumidor in range(3):
                     temp = str.format("({},{})  ",novoID,tempConsumidores[consumidor])
                     query = INSERT_COMANDA_CONSUMIDORES + temp
-                    print(query)   
-                    cur = db.executar(conn,cur,query)[1] 
-                    
+                    cur = db.executar(conn,cur,query)[1]                     
 
                     SCRIPT = query + '\n'
                     geraArquivoScript(SCRIPT)   
@@ -470,10 +467,54 @@ def comanda(lstMesaId,lstConsumidorId):
         print("Não foi possivel gerar seed comanda")
         return 0
 
-def pedido():
-    return
+def pedido(lstComandaId):
+    lstPedidosId = []
+    try:
+        conn = db.connectarBanco()
+        cur = db.gerarCursor(conn)
+        INSERT_PEDIDOS = ' INSERT INTO PEDIDO (codigo,datahora, "comandaId") VALUES '
+        
+        SELECT_COMANDA = ' select * from comanda where id = {}'
+
+        numSec = 2
+        indice = 0       
+
+        while numSec > indice:
+            numPedidos = random.randint(1,3)
+            temp = str.format(SELECT_COMANDA,lstComandaId[indice])
+            cur = db.executar(conn,cur,temp)[1]
+            comanda = cur.fetchone()
+            tempoInicial = comanda[2]
+            tempoFinal = comanda[3]
+            tempoMedio = (tempoFinal - tempoInicial) 
+            for x in range(numPedidos,0,-1):
+                codigo = faker.ean8()
+                datahora = tempoMedio / pow(2, x) + tempoInicial
+                datahora = datetime.isoformat(datahora)
+                comandaId = lstComandaId[indice]
+                temp = str.format("('{}','{}', {}) RETURNING ID; ",codigo,datahora,comandaId) 
+                query = INSERT_PEDIDOS + temp  
+                
+                SCRIPT = query + '\n'
+                geraArquivoScript(SCRIPT)   
+
+                cur = db.executar(conn,cur,query)[1]
+                pedidoId = cur.fetchone()[0]
+                lstPedidosId.append(pedidoId)
+
+            indice = indice + 1
+        db.desconectarBanco(cur,conn)
+        return lstPedidosId
+    except:
+        print("Não foi possivel gerar seed pedidos")
+        return 0
 
 def item():
+    # SELECT_PRODUTOS = ' select * from produto \
+        #                     where "estabelecimentoId" in (select distinct e.id from comanda c \
+        #                     inner join mesa m on m.id = c."mesaId" and c.id = {} \
+        #                     inner join estabelecimento e on e.id = m."estabelecimentoId") \
+        #                     and ativo = True '
     return
 
 def conta():
@@ -495,10 +536,10 @@ def usuarioConsumidor():
         numConsumidores = GlobalNumREGCONSUMIDOR
 
         while numConsumidores > 0:            
-            email = faker.free_email()
+            email = faker.first_name() + faker.first_name() + faker.free_email()
             uid = faker.password(length=29, special_chars=False, digits=True, upper_case=True, lower_case=True)
             enumorigemcriacao = 2
-            ativo = "true"
+            ativo = True
             
             temp = str.format(" ('{}','{}',{},{}) RETURNING ID ",email,uid,enumorigemcriacao,ativo)
             query = INSERT_USUARIO + temp
