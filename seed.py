@@ -51,7 +51,7 @@ def especialidade():
         for _ in listaEspecialidades:
             
             try:
-                values = str.format(" SELECT '{}' WHERE NOT EXISTS (SELECT DESCRICAO FROM ESPECIALIDADE WHERE DESCRICAO = '{}') ",_,_) 
+                values = str.format(" SELECT '{}' WHERE NOT EXISTS (SELECT DESCRICAO FROM ESPECIALIDADE WHERE DESCRICAO LIKE '{}') ",_,_) 
                 query = INSERT_ESPECIALIDADE + values
                 cur = db.executar(conn,cur,query)[1]
                 novoID = cur.fetchone()[0]                      
@@ -346,37 +346,6 @@ def produto(dicSecoes):
         print("Não foi possivel gerar seed produtos")
         return 0
     
-def usuarioFuncionario():
-    try:
-        conn = db.connectarBanco()
-        cur = db.gerarCursor(conn)
-        
-        INSERT_USUARIO = " INSERT INTO USUARIO (EMAIL,UID,ENUMORIGEMCRIACAO,ATIVO) VALUES "
-
-        numFuncionarios = 10 #10 - DONOS
-
-        while numFuncionarios > 0:            
-            email = faker.free_email()
-            uid = faker.password(length=29, special_chars=False, digits=True, upper_case=True, lower_case=True)
-            enumorigemcriacao = 3
-            ativo = "true"
-            
-            temp = str.format(" ('{}','{}',{},{}) RETURNING ID ",email,uid,enumorigemcriacao,ativo)
-            query = INSERT_USUARIO + temp
-
-            cur = db.executar(conn,cur,query)[1]
-            novoID = cur.fetchone()[0]
-            lstUsuarioDonoId.append(novoID)
-
-            #SCRIPT = query + '\n'
-            # geraArquivoScript(SCRIPT)
-            numFuncionarios = numFuncionarios - 1
-            
-        db.desconectarBanco(cur,conn)
-        return 
-    except:
-        print("Não foi possivel gerar seed usuario funcionario")
-
 def mesa(lstEstabelecimentoId):
     lstMesaId = []
     try:
@@ -495,10 +464,10 @@ def pedido(lstComandaId):
                 temp = str.format("('{}','{}', {}) RETURNING ID; ",codigo,datahora,comandaId) 
                 query = INSERT_PEDIDOS + temp  
                 
-                SCRIPT = query + '\n'
-                geraArquivoScript(SCRIPT)   
-
                 cur = db.executar(conn,cur,query)[1]
+                SCRIPT = query + '\n'
+                geraArquivoScript(SCRIPT) 
+
                 pedidoId = cur.fetchone()[0]
                 lstPedidosId.append(pedidoId)
 
@@ -507,6 +476,38 @@ def pedido(lstComandaId):
         return lstPedidosId
     except:
         print("Não foi possivel gerar seed pedidos")
+        return 0
+
+def plano():
+    lstPlanosId = []
+    planoBásico = ('BÁSICO','Cadastre até 6 Mesas',79.90,12)
+    planoMaster = ('MASTER','Sem limite de Mesas',99.90,12)
+    planos = [planoBásico,planoMaster]
+    try:
+        conn = db.connectarBanco()
+        cur = db.gerarCursor(conn)
+        INSERT_PLANOS = 'INSERT INTO PLANO (NOME,DESCRICAO,VALOR,DURACAO) '
+        for plano in planos:
+            try:
+                values = str.format(" SELECT '{}','{}',{},{} WHERE NOT EXISTS (SELECT DESCRICAO FROM PLANO WHERE NOME LIKE '{}') ",plano[0],plano[1],plano[2],plano[3],plano[0]) 
+                query = INSERT_PLANOS + values
+                cur = db.executar(conn,cur,query)[1]
+                novoID = cur.fetchone()[0]
+                       
+                lstPlanosId.append(novoID)
+                SCRIPT = query + '\n'        
+                geraArquivoScript(SCRIPT)
+            except:
+                query = f"SELECT * FROM PLANO WHERE NOME LIKE '{plano[0]}'"
+                cur = db.executar(conn,cur,query)[1]
+                print('Oi')  
+                novoID = cur.fetchone()[0]
+                lstPlanosId.append(novoID)         
+                
+        db.desconectarBanco(cur,conn)
+        return lstPlanosId
+    except:
+        print("Não foi possivel gerar seed planos")
         return 0
 
 def item():
@@ -518,9 +519,6 @@ def item():
     return
 
 def conta():
-    return
-
-def plano():
     return
 
 # GERENCIA DO CLIENTE  
@@ -602,6 +600,45 @@ def criaConsumidor():
         return lstConsumidorId
     except:
         return 0
+
+# GERENCIA FUNCIONARIO
+
+def usuarioFuncionario():
+    try:
+        conn = db.connectarBanco()
+        cur = db.gerarCursor(conn)
+        
+        INSERT_USUARIO = " INSERT INTO USUARIO (EMAIL,UID,ENUMORIGEMCRIACAO,ATIVO) VALUES "
+
+        numFuncionarios = 10 #10 - DONOS
+
+        while numFuncionarios > 0:            
+            email = faker.free_email()
+            uid = faker.password(length=29, special_chars=False, digits=True, upper_case=True, lower_case=True)
+            enumorigemcriacao = 3
+            ativo = "true"
+            
+            temp = str.format(" ('{}','{}',{},{}) RETURNING ID ",email,uid,enumorigemcriacao,ativo)
+            query = INSERT_USUARIO + temp
+
+            cur = db.executar(conn,cur,query)[1]
+            novoID = cur.fetchone()[0]
+            lstUsuarioDonoId.append(novoID)
+
+            #SCRIPT = query + '\n'
+            # geraArquivoScript(SCRIPT)
+            numFuncionarios = numFuncionarios - 1
+            
+        db.desconectarBanco(cur,conn)
+        return 
+    except:
+        print("Não foi possivel gerar seed usuario funcionario")
+
+def funcionario():
+    return 0
+
+def criaFuncionario():
+    return 0
 
 def geraArquivoScript(script):
     # f = open("script_seed.sql", "a+")

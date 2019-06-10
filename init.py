@@ -14,7 +14,8 @@ def start():
     lstConsumidorId = seed.criaConsumidor()
     lstComandaId = seed.comanda(lstMesaId,lstConsumidorId)
     lstPedidos = seed.pedido(lstComandaId)
-
+    lstPlanos = seed.plano()
+    
     return 0
 
 def main():    
