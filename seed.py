@@ -9,8 +9,8 @@ from datetime import timedelta
 faker = Faker('pt_BR')
 #É possivel ver que, os parametros de cada um dos metodos representam
 # chaves estrangeiras para as outras entidades.
-GlobalNumREG = 4
-GlobalNumREGCONSUMIDOR = GlobalNumREG * 35
+GlobalNumREG = 50
+GlobalNumREGCONSUMIDOR = GlobalNumREG * 50
 
 GlobalIcones = [
     'https://images.vexels.com/media/users/3/128437/isolated/preview/2dd809b7c15968cb7cc577b2cb49c84f-logotipo-de-restaurante-de-comida-de-pizza-by-vexels.png',
@@ -51,13 +51,13 @@ def especialidade():
         for _ in listaEspecialidades:
             
             try:
-                values = str.format(" SELECT '{}' WHERE NOT EXISTS (SELECT DESCRICAO FROM ESPECIALIDADE WHERE DESCRICAO LIKE '{}') ",_,_) 
+                values = str.format(" SELECT '{}' WHERE NOT EXISTS (SELECT DESCRICAO FROM ESPECIALIDADE WHERE DESCRICAO LIKE '{}') ; ",_,_) 
                 query = INSERT_ESPECIALIDADE + values
+                SCRIPT = query + '\n'        
+                geraArquivoScript(SCRIPT)
                 cur = db.executar(conn,cur,query)[1]
                 novoID = cur.fetchone()[0]                      
                 lstEspecialidadeId.append(novoID)
-                SCRIPT = query + '\n'        
-                geraArquivoScript(SCRIPT)
             except:
                 query = f"SELECT * FROM ESPECIALIDADE WHERE DESCRICAO LIKE '{_}'"
                 cur = db.executar(conn,cur,query)[1]
@@ -127,11 +127,12 @@ def usuarioDono():
             enumorigemcriacao = 1
             ativo = "true"
             
-            temp = str.format(" ('{}','{}',{},{}) RETURNING ID ",email,uid,enumorigemcriacao,ativo)
+            temp = str.format(" ('{}','{}',{},{}) RETURNING ID ;",email,uid,enumorigemcriacao,ativo)
             query = INSERT_USUARIO + temp
 
             cur = db.executar(conn,cur,query)[1]
             novoID = cur.fetchone()[0]
+            
             lstUsuarioDonoId.append(novoID)
 
             SCRIPT = query + '\n'
@@ -236,10 +237,10 @@ def estabelecimento(lstEspecialidadeId,lstEnderecoId,lstDonoId,lstCardapioId):
         indice = 0
         
         while numEst > indice :      
-            razaosocial = faker.bs()
-            cnpj = faker.cnpj()
+            razaosocial = faker.bs() + faker.last_name()
+            cnpj = faker.cnpj() 
             cnpj = cnpj.replace(".","").replace("/","").replace("-","")            
-            nome  = faker.company()
+            nome  = faker.company() + faker.last_name()
             descricao = faker.catch_phrase()
             horariofuncionamento = ""
             telefone = faker.phone_number()[3:]
@@ -322,8 +323,8 @@ def produto(dicSecoes):
                 
                 for produto in GlobalLista_Produtos[descricaoSecao]:
                     descricao = "Um produto muito gostoso"
-                    preco = random.randrange(1,45)
-                    foto = ""
+                    preco = random.random() * 100
+                    foto = "https://uploads.knightlab.com/storymapjs/7a64bb0361468cdfc9b5bda65d5fc8f9/roteiro-burguer-cult/_images/burguer.png"
                     empromocao = False
                     descontopromocional = 0
                     ativo = True
@@ -389,11 +390,11 @@ def comanda(lstMesaId,lstConsumidorId):
         INSERT_COMANDA = " INSERT INTO COMANDA (horarioinicio,horariofim,enumsituacaocomanda,\"responsavelId\",\"mesaId\") VALUES "
         INSERT_COMANDA_CONSUMIDORES = " INSERT INTO comanda_consumidores_consumidor (\"comandaId\",\"consumidorId\") VALUES "
         
-        numMesa = len(lstMesaId)
+        numComan = len(lstMesaId)
         indice = 0
         enumsituacaocomanda = 4
         #fazer um random para escolher o numero de responsaveis de uma mesa
-        while indice < numMesa:
+        while indice < numComan:
             for _ in range(random.randint(1,3)):
                 consumidorId = lstConsumidorId[random.randint(0,len(lstConsumidorId)-1)]  
 
@@ -422,7 +423,7 @@ def comanda(lstMesaId,lstConsumidorId):
                         tempConsumidores.append(x)                    
                 
                 for consumidor in range(3):
-                    temp = str.format("({},{})  ",novoID,tempConsumidores[consumidor])
+                    temp = str.format("({},{}); ",novoID,tempConsumidores[consumidor])
                     query = INSERT_COMANDA_CONSUMIDORES + temp
                     cur = db.executar(conn,cur,query)[1]                     
 
@@ -445,10 +446,10 @@ def pedido(lstComandaId):
         
         SELECT_COMANDA = ' select * from comanda where id = {}'
 
-        numSec = 2
+        numPed = len(lstComandaId)
         indice = 0       
 
-        while numSec > indice:
+        while numPed > indice:
             numPedidos = random.randint(1,3)
             temp = str.format(SELECT_COMANDA,lstComandaId[indice])
             cur = db.executar(conn,cur,temp)[1]
@@ -478,48 +479,117 @@ def pedido(lstComandaId):
         print("Não foi possivel gerar seed pedidos")
         return 0
 
-def plano():
-    lstPlanosId = []
-    planoBásico = ('BÁSICO','Cadastre até 6 Mesas',79.90,12)
-    planoMaster = ('MASTER','Sem limite de Mesas',99.90,12)
-    planos = [planoBásico,planoMaster]
+def plano():    
     try:
         conn = db.connectarBanco()
         cur = db.gerarCursor(conn)
         INSERT_PLANOS = 'INSERT INTO PLANO (NOME,DESCRICAO,VALOR,DURACAO) '
+
+        lstPlanosId = []
+        planoBásico = ('BÁSICO','Cadastre até 6 Mesas',79.90,12)
+        planoMaster = ('MASTER','Sem limite de Mesas',99.90,12)
+        planos = [planoBásico,planoMaster]
+
         for plano in planos:
             try:
                 values = str.format(" SELECT '{}','{}',{},{} WHERE NOT EXISTS (SELECT DESCRICAO FROM PLANO WHERE NOME LIKE '{}') ",plano[0],plano[1],plano[2],plano[3],plano[0]) 
                 query = INSERT_PLANOS + values
-                cur = db.executar(conn,cur,query)[1]
-                novoID = cur.fetchone()[0]
-                       
-                lstPlanosId.append(novoID)
                 SCRIPT = query + '\n'        
                 geraArquivoScript(SCRIPT)
+                cur = db.executar(conn,cur,query)[1]
+                novoID = cur.fetchone()[0]                       
+                lstPlanosId.append(novoID)                
             except:
                 query = f"SELECT * FROM PLANO WHERE NOME LIKE '{plano[0]}'"
                 cur = db.executar(conn,cur,query)[1]
-                print('Oi')  
                 novoID = cur.fetchone()[0]
                 lstPlanosId.append(novoID)         
                 
         db.desconectarBanco(cur,conn)
-        return lstPlanosId
+        return  
     except:
         print("Não foi possivel gerar seed planos")
         return 0
 
-def item():
-    # SELECT_PRODUTOS = ' select * from produto \
-        #                     where "estabelecimentoId" in (select distinct e.id from comanda c \
-        #                     inner join mesa m on m.id = c."mesaId" and c.id = {} \
-        #                     inner join estabelecimento e on e.id = m."estabelecimentoId") \
-        #                     and ativo = True '
-    return
+def item(lstPedidosId):
+    try:
+        SELECT_PRODUTOS = 'Select Produto.id,produto.preco from Produto where "estabelecimentoId" in \
+                            (Select E.id from Pedido P \
+                                inner join Comanda C on C.id = P."comandaId" and P.id =  {} \
+                                inner join Mesa M on M.id = C."mesaId" and M.ativo = True \
+                                inner join Estabelecimento E on E.id = M."estabelecimentoId") \
+                                and Ativo = True \ '
+    
+        conn = db.connectarBanco()
+        cur = db.gerarCursor(conn)
+        INSERT_ITENS = ' INSERT INTO ITEM (QUANTIDADE,OBSERVACOES,PRECO,ENTREGUE,"pedidoId","produtoId") VALUES '
+        
+        numItens = len(lstPedidosId)
+        indice = 0       
+        while numItens > indice:
+            SELECT_PRODUTOS = 'Select Produto.id,produto.preco from Produto where "estabelecimentoId" in \
+                            (Select E.id from Pedido P \
+                                inner join Comanda C on C.id = P."comandaId" and P.id =  {} \
+                                inner join Mesa M on M.id = C."mesaId" and M.ativo = True \
+                                inner join Estabelecimento E on E.id = M."estabelecimentoId") \
+                                and Ativo = True  \
+                                    limit {}  \
+                                    offset {}  '
+            
+            temp = str.format(SELECT_PRODUTOS,lstPedidosId[indice],random.randint(1,5),random.randint(1,5))
+            cur = db.executar(conn,cur,temp)[1]
+            produtos = cur.fetchall()
+            for produto in produtos:
+                quantidade = random.randint(1,3)
+                observacoes = ""
+                preco = produto[1] 
+                entregue = True
+                pedidoId = lstPedidosId[indice]
+                produtoId = produto[0]
+                temp = str.format("({},'{}', {},{},{},{}) ",quantidade,observacoes,preco,entregue,pedidoId,produtoId)
+                query = INSERT_ITENS + temp  
+                
+                cur = db.executar(conn,cur,query)[1]
+                SCRIPT = query + '\n'
+                geraArquivoScript(SCRIPT) 
+            indice = indice + 1
+        db.desconectarBanco(cur,conn)
+        return lstPedidosId
+    except:
+        print("Não foi possivel gerar seed itens")
+        return 0
 
 def conta():
-    return
+    try:
+        conn = db.connectarBanco()
+        cur = db.gerarCursor(conn)
+        
+        SELECT_TOTAIS = 'Select C.Id, sum(I.preco) from Comanda C  \
+                        inner join Pedido P on P."comandaId" = C.Id  \
+                        inner join Item I on I."pedidoId" = P.Id   \
+                        group by C.id  \
+                        order by C.id asc '
+
+        cur = db.executar(conn,cur,SELECT_TOTAIS)[1]
+        totais = cur.fetchall()
+        
+        INSERT_CONTAS = ' INSERT INTO CONTA (total,taxaservico,enumformapagamento,"comandaId") VALUES '
+        
+        for conta in totais:
+            comanda = conta[0]
+            total = conta[1]
+            taxaservico = random.random() * 10
+            enumformapagamento = random.randint(1,5)
+            temp = str.format("({},{},{},{}) ",total,taxaservico,enumformapagamento,comanda)
+            query = INSERT_CONTAS + temp              
+            SCRIPT = query + '\n'
+            geraArquivoScript(SCRIPT) 
+            cur = db.executar(conn,cur,query)[1]            
+        db.desconectarBanco(cur,conn)
+        return 0
+    except:
+        print("Não foi possivel gerar seed contas")
+        return 0
 
 # GERENCIA DO CLIENTE  
 
@@ -539,7 +609,7 @@ def usuarioConsumidor():
             enumorigemcriacao = 2
             ativo = True
             
-            temp = str.format(" ('{}','{}',{},{}) RETURNING ID ",email,uid,enumorigemcriacao,ativo)
+            temp = str.format(" ('{}','{}',{},{}) RETURNING ID; ",email,uid,enumorigemcriacao,ativo)
             query = INSERT_USUARIO + temp
 
             cur = db.executar(conn,cur,query)[1]
@@ -641,7 +711,7 @@ def criaFuncionario():
     return 0
 
 def geraArquivoScript(script):
-    # f = open("script_seed.sql", "a+")
-    # f.write(script)
-    # f.close()
+    f = open("script_seed.sql", "a+")
+    f.write(script)
+    f.close()
     return 0

@@ -8,14 +8,16 @@ def start():
     lstDonoId = seed.criaDono()
     lstCardapioId = seed.cardapio()
     lstEstabelecimentoId = seed.estabelecimento(lstEspecialidadeId,lstEnderecoId,lstDonoId,lstCardapioId)    
-    dicSecoes = seed.secao(lstCardapioId)
-    lstProdutosId = seed.produto(dicSecoes)
+    dicSecao = seed.secao(lstCardapioId)
+    lstProdutoId = seed.produto(dicSecao)
     lstMesaId = seed.mesa(lstEstabelecimentoId)
     lstConsumidorId = seed.criaConsumidor()
     lstComandaId = seed.comanda(lstMesaId,lstConsumidorId)
-    lstPedidos = seed.pedido(lstComandaId)
-    lstPlanos = seed.plano()
-    
+    lstPedidoId = seed.pedido(lstComandaId)
+    lstPlanoId = seed.plano()
+    lstItemId = seed.item(lstPedidoId)
+    seed.conta()
+
     return 0
 
 def main():    
