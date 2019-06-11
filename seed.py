@@ -492,7 +492,7 @@ def plano():
 
         for plano in planos:
             try:
-                values = str.format(" SELECT '{}','{}',{},{} WHERE NOT EXISTS (SELECT DESCRICAO FROM PLANO WHERE NOME LIKE '{}') ",plano[0],plano[1],plano[2],plano[3],plano[0]) 
+                values = str.format(" SELECT '{}','{}',{},{} WHERE NOT EXISTS (SELECT DESCRICAO FROM PLANO WHERE NOME LIKE '{}') ; ",plano[0],plano[1],plano[2],plano[3],plano[0]) 
                 query = INSERT_PLANOS + values
                 SCRIPT = query + '\n'        
                 geraArquivoScript(SCRIPT)
@@ -546,7 +546,7 @@ def item(lstPedidosId):
                 entregue = True
                 pedidoId = lstPedidosId[indice]
                 produtoId = produto[0]
-                temp = str.format("({},'{}', {},{},{},{}) ",quantidade,observacoes,preco,entregue,pedidoId,produtoId)
+                temp = str.format("({},'{}', {},{},{},{}) ; ",quantidade,observacoes,preco,entregue,pedidoId,produtoId)
                 query = INSERT_ITENS + temp  
                 
                 cur = db.executar(conn,cur,query)[1]
@@ -580,7 +580,7 @@ def conta():
             total = conta[1]
             taxaservico = random.random() * 10
             enumformapagamento = random.randint(1,5)
-            temp = str.format("({},{},{},{}) ",total,taxaservico,enumformapagamento,comanda)
+            temp = str.format("({},{},{},{}) ;",total,taxaservico,enumformapagamento,comanda)
             query = INSERT_CONTAS + temp              
             SCRIPT = query + '\n'
             geraArquivoScript(SCRIPT) 
