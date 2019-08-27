@@ -21,7 +21,7 @@ def gerarCursor(conn):
 
 def connectarBanco():
     try:
-        conn = psycopg2.connect("dbname='virtualwaiterdb' user='postgres' password='admin' host='localhost' ")
+        conn = psycopg2.connect("dbname='virtualback' user='postgres' password='admin' host='localhost' ")
         return conn
     except:
         print("Nao foi possivel conectar no Banco de Dados")

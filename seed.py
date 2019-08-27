@@ -5,12 +5,13 @@ import time
 import random
 from datetime import datetime  
 from datetime import timedelta  
+import math
 
 faker = Faker('pt_BR')
 #É possivel ver que, os parametros de cada um dos metodos representam
 # chaves estrangeiras para as outras entidades.
-GlobalNumREG = 50
-GlobalNumREGCONSUMIDOR = GlobalNumREG * 50
+GlobalNumREG = 5
+GlobalNumREGCONSUMIDOR = GlobalNumREG * 5
 
 GlobalIcones = [
     'https://images.vexels.com/media/users/3/128437/isolated/preview/2dd809b7c15968cb7cc577b2cb49c84f-logotipo-de-restaurante-de-comida-de-pizza-by-vexels.png',
@@ -27,10 +28,10 @@ GlobalIcones = [
 
 #Secoes
 Tradicionais = ["Don Bene", "Paulista", "Da Mama", "Dos Deuses", "Alho e Oleo", "Atum", "Catu-Atum", "Aliche", "Calabresa", "Baiana", "4 Queijos", "3 Queijos", "Muçarela", "Marguerita", "Portuguesa", "Caipira", "Bauru", "Siciliana", "Sertaneja", "Paito de Peru", "Peito de Peru EWspecial", "Champignon"]
-Lights = ["Escarola", "Escarola com Aliche", "Brócolis", "Rucula", "Ao pesto", "Alcaparras", "Vegetariana"]
-Doces = ["Banana", "Romeu e Julieta", "Brigadairo", "Prestigio", "Confeti", "Goiabada", "Leite Condesado"]
-Bebidas = ["Coca-Cola", "Refrigerante 1L", "Refrigerante 2L", "Refrigerante 500ml", "lata", "Água", "Vinho Suave Mioranza", "Vinho Outros"]
-Lanches = ["x-Tudo", "Hamburguer", "x-Salada", "x-EggBurguer", "x-Bacon", "x-EggBacon", "x-TudoDuplo"]
+Lights = ["Escarola", "Escarola com Aliche", "Brócolis", "Rucula", "Ao pesto", "Alcaparras", "Vegetariana", "Só queijo"]
+Doces = ["Banana", "Romeu e Julieta", "Brigadairo", "Prestigio", "Confeti", "Goiabada", "Leite Condesado", "Mamão"]
+Bebidas = ["Coca-Cola", "Refrigerante 1L", "Refrigerante 2L", "Refrigerante 500ml", "lata", "Água", "Vinho Suave Mioranza", "Vinho Outros", "Cachaça", "Pinga", "Vodkca"]
+Lanches = ["x-Tudo", "Hamburguer", "x-Salada", "x-EggBurguer", "x-Bacon", "x-EggBacon", "x-TudoDuplo","x-Faminto"]
 GlobalLista_Produtos = {}
 
 GlobalLista_Produtos["Tradicionais"] = Tradicionais
@@ -159,7 +160,7 @@ def dono(lstUsuarioDonoId):
         while numDono > 0:            
             nome = faker.first_name()
             sobrenome = faker.last_name()
-            datanascimento = faker.date(pattern="%d/%m/%Y", end_datetime=None)
+            datanascimento = faker.date(pattern="%Y-%m-%d", end_datetime=None)
             cpf = faker.cpf()
             cpf = cpf.replace(".","").replace("-","")
             rg =  faker.rg()
@@ -323,7 +324,8 @@ def produto(dicSecoes):
                 
                 for produto in GlobalLista_Produtos[descricaoSecao]:
                     descricao = "Um produto muito gostoso"
-                    preco = random.random() * 100
+                    preco = round(random.random() * 100,2)
+                    print(preco)
                     foto = "https://uploads.knightlab.com/storymapjs/7a64bb0361468cdfc9b5bda65d5fc8f9/roteiro-burguer-cult/_images/burguer.png"
                     empromocao = False
                     descontopromocional = 0
@@ -639,7 +641,7 @@ def consumidor(lstUsuarioConsumidor):
         
         while numConsumidor > 0:            
             nome = faker.first_name() + ' ' + faker.last_name()
-            datanascimento = faker.date(pattern="%d/%m/%Y", end_datetime=None)
+            datanascimento = faker.date(pattern="%Y-%m-%d", end_datetime=None)
             celular = faker.cellphone_number()
             celular = celular.replace(" ","").replace("+","")[2:]
             
@@ -711,7 +713,7 @@ def criaFuncionario():
     return 0
 
 def geraArquivoScript(script):
-    f = open("script_seed.sql", "a+")
-    f.write(script)
-    f.close()
+    # f = open("script_seed.sql", "a+")
+    # f.write(script)
+    # f.close()
     return 0
